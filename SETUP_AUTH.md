@@ -142,10 +142,10 @@ Make sure your `.env` has all these:
 
 ```env
 # Stream Video (already set)
-STREAM_API_KEY=rzgjggh4y8ng
-STREAM_SECRET_KEY=75acr3rb8eneg8ru4ztfkpe36pyskhmg4r784sepuwvv9ucqph2ftd8d44p65hdq
-NEXT_PUBLIC_STREAM_API_KEY=rzgjggh4y8ng
-NEXT_PUBLIC_CALL_ID=demo-meeting
+STREAM_API_KEY=<>
+STREAM_SECRET_KEY=<>
+NEXT_PUBLIC_STREAM_API_KEY=<>
+NEXT_PUBLIC_CALL_ID=<>
 
 # Database (YOU NEED TO ADD)
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"

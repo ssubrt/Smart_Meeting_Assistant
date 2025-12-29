@@ -20,17 +20,41 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+## Planning for V2.0 (Adding new Features)
+Plan: Smart Meeting Assistant v2.0 Upgrade
+Your Phase 1 is solid - you have a working video meeting app with real-time transcription. Your proposed features absolutely make sense and align perfectly with production requirements. Here's a comprehensive roadmap:
 
-To learn more about Next.js, take a look at the following resources:
+Phase 2 Core Features (Recommended Order)
+ - Authentication System - Add NextAuth.js with Google OAuth, protect routes with middleware, create user sessions with JWT
+- Dynamic Meeting Creation - Replace hardcoded CALL_ID with UUID-based meeting IDs, add "Create Meeting" and "Join Meeting" flows
+- Database Schema - Set up PostgreSQL/MongoDB with tables for users, meetings, transcripts, participants
+- Redis for Real-time Cache - Store active meeting transcripts in Redis with TTL, flush to database on meeting end
+- API Routes Expansion - Add /meetings, /transcripts, users endpoints with proper validation
+- Meeting Invite System - Generate shareable links, add copy-to-clipboard, show active participants
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Redis vs Kafka Decision
+Use REDIS for your use case because:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+✅ Perfect for real-time transcript buffering with LPUSH/RPUSH
+✅ Simple pub/sub for live transcript updates across tabs
+✅ TTL-based expiry (auto-delete after meeting ends)
+✅ Much simpler setup than Kafka
+✅ Lower latency for read-heavy operations
+Skip Kafka - it's overkill unless you need:
 
-## Deploy on Vercel
+Event sourcing with replay
+Processing millions of events/sec
+Complex stream processing pipelines
+Multi-consumer distributed systems
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Architecture:
+Meeting Active → Redis (live buffer) → On Meeting End → PostgreSQL (permanent storage)
+
+Further Considerations
+Authentication Provider? NextAuth.js supports Google, GitHub, Email. Want multiple providers or Google-only?
+Database Choice? PostgreSQL (relational, JSON support) or MongoDB (flexible schema)? PostgreSQL recommended for meeting history queries.
+Meeting Permissions? Host/co-host/participant roles with different controls (kick, mute all, end meeting)?
+AI Features Priority? Meeting summaries, action items extraction, or Q&A bot first?
+Recording Storage? Store video recordings in S3/Cloudflare R2 alongside transcripts?
+Your plan is spot-on - the features you mentioned are exactly what production meeting apps need. Focus on auth → dynamic meetings → persistence first, then layer on AI features.

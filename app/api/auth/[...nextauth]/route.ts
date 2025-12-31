@@ -54,18 +54,18 @@ export const authOptions: NextAuthConfig = {
     })
   ],
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === "google" && user.email) {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
         try {
           const existingUser = await prisma.user.findUnique({
-            where: { email: user.email }
+            where: { email: user.email! }
           })
 
           if (!existingUser) {
             await prisma.user.create({
               data: {
-                email: user.email,
-                username: user.name || user.email.split('@')[0],
+                email: user.email!,
+                username: user.name || user.email!.split('@')[0],
                 image: user.image,
                 googleId: account.providerAccountId,
               }
@@ -73,11 +73,7 @@ export const authOptions: NextAuthConfig = {
           } else if (!existingUser.googleId) {
             await prisma.user.update({
               where: { id: existingUser.id },
-              data: { 
-                googleId: account.providerAccountId,
-                username: existingUser.username || user.name || user.email.split('@')[0],
-                image: user.image || existingUser.image
-              }
+              data: { googleId: account.providerAccountId }
             })
           }
         } catch (error) {
@@ -87,34 +83,30 @@ export const authOptions: NextAuthConfig = {
       }
       return true
     },
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-        token.email = user.email
+    async jwt({ token, user, account }) {
+      if (user && user.email) {
+        // Always fetch the actual database user to get the correct ID
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email }
+        })
         
-        if (user.email) {
-          try {
-            const dbUser = await prisma.user.findUnique({
-              where: { email: user.email }
-            })
-            
-            if (dbUser) {
-              token.username = dbUser.username
-              token.image = dbUser.image
-            }
-          } catch (error) {
-            console.error("JWT callback error:", error)
-          }
+        if (dbUser) {
+          token.id = dbUser.id
+          token.username = dbUser.username
+          token.email = dbUser.email
+          token.image = dbUser.image
+        } else {
+          // Fallback if user somehow doesn't exist
+          token.id = user.id
+          token.email = user.email
         }
       }
       return token
     },
     async session({ session, token }) {
-      if (session.user && token) {
+      if (session.user) {
         session.user.id = token.id as string
         session.user.username = token.username as string
-        session.user.email = token.email as string
-        session.user.image = token.image as string
       }
       return session
     }
@@ -128,7 +120,6 @@ export const authOptions: NextAuthConfig = {
   secret: process.env.NEXTAUTH_SECRET,
 }
 
-// --- FIXED CODE BELOW ---
-const { handlers, auth, signIn, signOut } = NextAuth(authOptions)
+export const { handlers, auth, signIn, signOut } = NextAuth(authOptions)
 
 export const { GET, POST } = handlers

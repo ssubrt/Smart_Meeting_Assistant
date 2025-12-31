@@ -23,6 +23,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   meetings      Meeting[]
+  participants  Participant[]
   
   @@map("users")
 }
@@ -78,8 +79,24 @@ model Meeting {
   
   host          User     @relation(fields: [hostId], references: [id], onDelete: Cascade)
   transcripts   Transcript[]
+  participants  Participant[]
   
   @@map("meetings")
+}
+
+model Participant {
+  id          String   @id @default(cuid())
+  meetingId   String
+  userId      String
+  joinedAt    DateTime @default(now())
+  leftAt      DateTime?
+  duration    Int?     // Duration in seconds
+  
+  meeting     Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([meetingId, userId])
+  @@map("participants")
 }
 
 model Transcript {
